@@ -7,6 +7,7 @@ const CONFIG = require('./config');
 
 // Websocket init
 const ws = new WebSocket(CONFIG.table);
+const wss = new WebSocket.Server({ port: 8888 });
 
 // Goal model
 const Match = require('./models/Match');
@@ -65,6 +66,11 @@ function storeNewGoal(tableEvent) {
 
         let player = tableEvent.pin_name === 'BLUE_GOAL_LINE' ? match.bluePlayer : match.redPlayer;
 
+        if (duration === 0) {
+            console.log("Invalid goal detected");
+            return;
+        }
+
         let newGoal = new Goal({
             speed,
             duration,
@@ -85,5 +91,68 @@ function storeNewGoal(tableEvent) {
         });
     });
 }
+
+let webSocketInstance = null;
+
+wss.on('connection', ws => {
+    console.log("Scoretable is connected");
+
+    // ws.on('message', message => {
+    //     console.log('received: %s', message);
+    // });
+
+    webSocketInstance = ws;
+
+    ws.on('close', function close() {
+        console.log("Scoretable disconnected");
+        webSocketInstance = null;
+    });
+});
+
+
+setInterval(() => {
+    if (!webSocketInstance) return;
+
+    Match.findOne({'isActive': true})
+        .populate('redPlayer')
+        .populate('bluePlayer')
+        .exec((err, activeMatch) => {
+        
+        let {bluePlayer, redPlayer} = activeMatch;
+
+        let promises = [
+            new Promise((res, rej) => {
+                Goal.find({
+                    match: activeMatch,
+                    player: bluePlayer
+                }, (err, goals) => {
+                    res(goals.length);
+                });
+            }),
+            new Promise((res, rej) => {
+                Goal.find({
+                    match: activeMatch,
+                    player: redPlayer
+                }, (err, goals) => {
+                    res(goals.length);
+                });
+            })
+        ];
+
+        Promise.all(promises).then((counts) => {
+            let [blueScore, redScore] = counts;
+
+            let resObj = {
+                bluePlayer,
+                redPlayer,
+                blueScore,
+                redScore
+            };
+
+            // console.log(resObj);
+            webSocketInstance.send(JSON.stringify(resObj));
+        });
+    });
+}, 2000);
 
 module.exports = {init};

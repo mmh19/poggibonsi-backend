@@ -20,7 +20,7 @@ POST: /signup
 
 #### Players
 ~~~~ 
-GET: /players 
+GET: /api/players 
 ~~~~
 
 Retrieves the full list of registered players.
@@ -28,7 +28,15 @@ Retrieves the full list of registered players.
 ---
 
 ~~~~
-PUT: /players/:playerId
+GET: /api/players/:playerId
+~~~~
+Returns the `UserObject` related to the given `playerId`.
+
+---
+
+
+~~~~
+PUT: /api/players/:playerId
 ~~~~
 
 Updates the user data based on the values of `firstName`, `lastName`, `email` and `available`.
@@ -37,20 +45,31 @@ Updates the user data based on the values of `firstName`, `lastName`, `email` an
 
 #### Matches
 ~~~~ 
-GET: /matches 
+GET: /api/matches 
 ~~~~
 Retrieves the current active match.
 
 ---
 
 ~~~~ 
-POST: /matches 
+POST: /api/matches 
 ~~~~
 Creates a new match given a pair of player ids.
 `redPlayer` is the red player id.
 `bluePlayer` is the blue player id.
 
+#### Returned values
+`{MatchObject}` if the match creation is successful
+
+#### Meaningful HTTP status codes
+`200` Match created
+`403` Another match is in progress
+
 ---
 
-
+### Live Scoretable
+~~~~
+ws://localhost:8888/
+~~~~
+Websocket which streams the current match status in real-time.
 

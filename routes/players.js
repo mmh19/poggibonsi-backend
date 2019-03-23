@@ -5,15 +5,61 @@ const api = express.Router();
 
 // Models
 const Player = require('../models/Player');
+const Goal = require('../models/Goal');
 
 api.get('/', (req, res) => {
-    Player.find({}, (err, players) => {
+    Player.find({})
+        .lean()
+        .exec((err, players) => {
+
         if (err) {
             res.status(500).json({});
             return;
         }
 
-        res.status(200).json(players);
+        let playersPromises = players.map(player => {
+            return new Promise((res, rej) => {
+                Goal.find({player}, (err, goals) => {
+                    player.ranking = goals.length;
+
+                    res(player);
+                });
+            });
+        });
+
+        Promise.all(playersPromises).then(players => {
+            res.status(200).json(players);
+        });
+    });
+});
+
+api.get('/:playerId', (req, res) => {
+    let playerId = req.params.playerId;
+
+    if (!playerId) {
+        res.status(400).json({
+            'error': 'playerId is mandatory'
+        });
+
+        return;
+    }
+
+    Player.findById(playerId)
+        .lean()
+        .exec((err, player) => {
+
+        if (!player) {
+            res.status(404).json({
+                'error': 'user not found'
+            });
+            return;
+        }
+
+        Goal.find({player}, (err, goals) => {
+            player.ranking = goals.length;
+            res.status(200).json(player);
+        });
+
     });
 });
 

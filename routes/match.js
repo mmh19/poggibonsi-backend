@@ -6,9 +6,6 @@ const api = express.Router();
 // Models
 const Match = require('../models/Match');
 
-// // 5c9627fe4effaa22c0c60693 Marco
-// // 5c9628524effaa22c0c60694 Sidoti
-
 api.get('/', (req, res) => {
     Match.findOne({'isActive': true}, (err, activeMatch) => {
         if (err) {
@@ -38,7 +35,7 @@ api.post('/', (req, res) => {
     // Check if there are active matches
     Match.findOne({'isActive': true}, (err, activeMatch) => {
         if (activeMatch) {
-            res.status(400).json({
+            res.status(403).json({
                 'error': 'there is already an active match'
             });
 
