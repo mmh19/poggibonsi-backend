@@ -71,5 +71,14 @@ Creates a new match given a pair of player ids.
 ~~~~
 ws://localhost:8888/
 ~~~~
-Websocket which streams the current match status in real-time.
+Websocket which streams the current match status in real-time. The message has the following format:
+
+~~~~
+{
+    bluePlayer: <UserObject>,
+    redPlayer: <UserObject>,
+    blueScore: <Number>,
+    redScore: <Number>
+}
+~~~~
 
