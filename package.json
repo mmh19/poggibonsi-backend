@@ -1,0 +1,30 @@
+{
+  "name": "poggibonsi_be",
+  "version": "1.0.0",
+  "description": "Backend side of Poggibonsi Smart Table Soccer system",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/spondone/poggibonsi-backend.git"
+  },
+  "keywords": [
+    "hackathon"
+  ],
+  "author": "Marco Ferrantini <info@marcoferrantini.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/spondone/poggibonsi-backend/issues"
+  },
+  "homepage": "https://github.com/spondone/poggibonsi-backend#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "config-multipaas": "^0.2.3",
+    "express": "^4.16.4",
+    "mongoose": "^5.4.19",
+    "morgan": "^1.9.1",
+    "ws": "^6.2.0"
+  }
+}
