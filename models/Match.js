@@ -4,9 +4,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 let MatchSchema = new Schema({
-    isActive: {
-        type: Boolean,
-        default: true
+    status: {
+        type: String,
+        required: true,
+        default: 'PENDING'
     },
 
     redPlayer: {

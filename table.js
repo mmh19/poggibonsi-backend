@@ -13,19 +13,6 @@ const wss = new WebSocket.Server({ port: 8888 });
 const Match = require('./models/Match');
 const Goal = require('./models/Goal');
 
-let BALL_DIAMETER = 0.032;
-
-let sensors = {
-    BLUE_GOAL_LINE: {
-        ACTIVE: null,
-        INACTIVE: null
-    },
-    RED_GOAL_LINE: {
-        ACTIVE: null,
-        INACTIVE: null
-    }
-};
-
 function init() {
     ws.on('open', () => {
         console.log("Table is online");
@@ -38,56 +25,24 @@ function init() {
         if (tableEvent.pin_name === 'BLUE_NET' ||
             tableEvent.pin_name === 'RED_NET') return;
 
-        sensors[tableEvent.pin_name][tableEvent.event_type] = tableEvent.time;
-
-        let {ACTIVE, INACTIVE} = sensors[tableEvent.pin_name];
-
-        if (ACTIVE && INACTIVE) {
-            storeNewGoal(tableEvent);
-        }
-    });
-}
-
-function storeNewGoal(tableEvent) {
-    // Check if there is an active match
-    Match.findOne({'isActive': true}, (err, match) => {
-        if (!match) {
-            console.warn("No active matches, this goal won't be recorded.");
-            return;
-        }
-
-        let {ACTIVE, INACTIVE} = sensors[tableEvent.pin_name];
-
-        let duration = (INACTIVE - ACTIVE) / 1E6;
-        let speed = (1 / duration) * BALL_DIAMETER;
-
-        // Reset sensor status
-        sensors[tableEvent.pin_name] = {ACTIVE: null, INACTIVE: null};
-
-        let player = tableEvent.pin_name === 'BLUE_GOAL_LINE' ? match.bluePlayer : match.redPlayer;
-
-        if (duration === 0) {
-            console.log("Invalid goal detected");
-            return;
-        }
-
-        let newGoal = new Goal({
-            speed,
-            duration,
-            player,
-            match,
-        });
-
-        newGoal.save(err => {
-            if (err) {
-                console.log("Error during goal saving");
+        Match.findOne({'status': 'ACTIVE'}, (err, match) => {
+            if (!match) {
+                console.warn("No active matches, this goal won't be recorded.");
                 return;
             }
-
-            console.log("Goal recorded:");
-            console.log("Duration (s): " + duration);
-            console.log("Speed (m/s): " + speed);
-            console.log("Player: " + player.firstName);
+    
+            let player = tableEvent.pin_name === 'BLUE_GOAL_LINE' ? match.bluePlayer : match.redPlayer;
+            let newGoal = new Goal({player, match});
+    
+            newGoal.save(err => {
+                if (err) {
+                    console.log("Error during goal saving");
+                    return;
+                }
+    
+                console.log("Goal recorded:");
+                console.log("Player: " + (tableEvent.pin_name === "BLUE_GOAL_LINE" ? "Blue!" : "Red!"));
+            });
         });
     });
 }
@@ -113,7 +68,7 @@ wss.on('connection', ws => {
 setInterval(() => {
     if (!webSocketInstance) return;
 
-    Match.findOne({'isActive': true})
+    Match.findOne({'status': 'ACTIVE'})
         .populate('redPlayer')
         .populate('bluePlayer')
         .exec((err, activeMatch) => {
@@ -153,6 +108,6 @@ setInterval(() => {
             webSocketInstance.send(JSON.stringify(resObj));
         });
     });
-}, 2000);
+}, 500);
 
 module.exports = {init};

@@ -4,8 +4,10 @@ const express = require('express');
 const api = express.Router();
 
 // Models
+const Match = require('../models/Match');
 const Player = require('../models/Player');
 const Goal = require('../models/Goal');
+
 
 api.get('/', (req, res) => {
     Player.find({})
@@ -18,11 +20,30 @@ api.get('/', (req, res) => {
         }
 
         let playersPromises = players.map(player => {
-            return new Promise((res, rej) => {
-                Goal.find({player}, (err, goals) => {
-                    player.ranking = goals.length;
+            return new Promise((outRes, outRej) => {
 
-                    res(player);
+                let playerPromises = [
+                    new Promise((res, rej) => {
+                        Goal.find({player}, (err, goals) => {
+                            res(goals.length);
+                        });
+                    }),
+                    new Promise((res, rej) => {
+                        Match.find({$or: [{bluePlayer: player}, {redPlayer: player}]}, (err, matches) => {
+                            res(matches.length);
+                        });
+                    })
+                ];
+
+                Promise.all(playerPromises).then(data => {
+                    let [goals, matches] = data;
+                    player.stats = {
+                        matches,
+                        goals,
+                        ranking: matches ? goals / matches : 0
+                    };
+
+                    outRes(player);
                 });
             });
         });
@@ -72,16 +93,35 @@ api.put('/:playerId', (req, res) => {
     Player.findById(playerToUpdate, (err, playerToUpdate) => {
         if (err) {
             res.status(400).json({
-                'error': 'user not valid'
+                'error': 'player not valid'
             });
 
             return;
         }
 
-        playerToUpdate.available = available || playerToUpdate.available;
-        playerToUpdate.firstName = firstName || playerToUpdate.firstName;
-        playerToUpdate.lastName  = lastName  || playerToUpdate.lastName;
-        playerToUpdate.email     = email     || playerToUpdate.email;
+        if (!playerToUpdate) {
+            res.status(404).json({
+                'error': 'player not found'
+            });
+
+            return;
+        }
+
+        if (typeof available !== 'undefined') {
+            playerToUpdate.available = available;
+        }
+
+        if (typeof firstName !== 'undefined') {
+            playerToUpdate.firstName = firstName;
+        }
+
+        if (typeof lastName !== 'undefined') {
+            playerToUpdate.lastName = lastName;
+        }
+
+        if (typeof email !== 'undefined') {
+            playerToUpdate.email = email;
+        }
 
         playerToUpdate.save(err => {
             if (err) {

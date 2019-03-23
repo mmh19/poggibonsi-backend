@@ -47,6 +47,20 @@ Updates the user data based on the values of `firstName`, `lastName`, `email` an
 ~~~~ 
 GET: /api/matches 
 ~~~~
+Retrieves the list of all existing matches
+
+---
+
+~~~~
+GET: /api/matches/pending
+~~~~
+Retrieves the current pending match.
+
+---
+
+~~~~
+GET: /api/matches/active
+~~~~
 Retrieves the current active match.
 
 ---
@@ -64,6 +78,14 @@ Creates a new match given a pair of player ids.
 #### Meaningful HTTP status codes
 `200` Match created
 `403` Another match is in progress
+
+---
+
+~~~~
+PUT: /api/matches/:matchId
+~~~~
+
+Updates the match data based on the values of `isActive`,
 
 ---
 

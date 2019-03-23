@@ -14,15 +14,6 @@ let GoalSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Player',
         required: true
-    },
-
-    duration: {
-        type: Number,
-        required: false
-    },
-    speed: {
-        type: Number,
-        required: false
     }
 }, {
     timestamps: true
