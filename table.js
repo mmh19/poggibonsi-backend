@@ -52,10 +52,6 @@ let webSocketInstance = null;
 wss.on('connection', ws => {
     console.log("Scoretable is connected");
 
-    // ws.on('message', message => {
-    //     console.log('received: %s', message);
-    // });
-
     webSocketInstance = ws;
 
     ws.on('close', function close() {
@@ -73,6 +69,8 @@ setInterval(() => {
         .populate('bluePlayer')
         .exec((err, activeMatch) => {
         
+        if (!activeMatch) return;
+
         let {bluePlayer, redPlayer} = activeMatch;
 
         let promises = [
